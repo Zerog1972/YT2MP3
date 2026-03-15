@@ -13,14 +13,14 @@ namespace YT2MP3
     /// </summary>
     internal static class ToolManager
     {
-        public static readonly string ToolsDir   = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools");
-        public static readonly string YtDlpPath  = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools", "yt-dlp.exe");
+        public static readonly string ToolsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools");
+        public static readonly string YtDlpPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools", "yt-dlp.exe");
         public static readonly string FfmpegPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools", "ffmpeg.exe");
 
-        private const string YtDlpUrl  = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe";
+        private const string YtDlpUrl = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe";
         private const string FfmpegUrl = "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip";
 
-        public static bool YtDlpReady  => File.Exists(YtDlpPath);
+        public static bool YtDlpReady => File.Exists(YtDlpPath);
         public static bool FfmpegReady => File.Exists(FfmpegPath);
 
         public static async Task EnsureToolsAsync(Action<string> onProgress, CancellationToken token)
@@ -30,24 +30,24 @@ namespace YT2MP3
             if (!YtDlpReady)
                 await DownloadYtDlpAsync(onProgress, token);
             else
-                onProgress("yt-dlp   déjà présent.");
+                onProgress("yt-dlp déjà présent.");
 
             if (!FfmpegReady)
                 await DownloadFfmpegAsync(onProgress, token);
             else
-                onProgress("ffmpeg   déjà présent.");
+                onProgress("ffmpeg déjà présent.");
         }
 
         private static async Task DownloadYtDlpAsync(Action<string> onProgress, CancellationToken token)
         {
-            onProgress("Téléchargement de yt-dlp…");
+            onProgress("Téléchargement de yt-dlp...");
             var tmp = YtDlpPath + ".tmp";
             try
             {
                 await DownloadFileAsync(YtDlpUrl, tmp,
-                    pct => onProgress(string.Format("  yt-dlp  {0,3}%", pct)), token);
+                    pct => onProgress(string.Format("yt-dlp {0,3}%", pct)), token);
                 File.Move(tmp, YtDlpPath);
-                onProgress("  yt-dlp  ? téléchargé.");
+                onProgress("yt-dlp téléchargé.");
             }
             catch
             {
@@ -58,16 +58,16 @@ namespace YT2MP3
 
         private static async Task DownloadFfmpegAsync(Action<string> onProgress, CancellationToken token)
         {
-            onProgress("Téléchargement de ffmpeg…");
+            onProgress("Téléchargement de ffmpeg...");
             var zipPath = Path.Combine(ToolsDir, "ffmpeg.zip");
             try
             {
                 await DownloadFileAsync(FfmpegUrl, zipPath,
-                    pct => onProgress(string.Format("  ffmpeg  {0,3}%", pct)), token);
+                    pct => onProgress(string.Format("ffmpeg {0,3}%", pct)), token);
 
-                onProgress("  ffmpeg  extraction…");
+                onProgress("Extraction de ffmpeg...");
                 await Task.Run(() => ZipExtractSingleFile(zipPath, "ffmpeg.exe", FfmpegPath), token);
-                onProgress("  ffmpeg  ? extrait.");
+                onProgress("ffmpeg extrait.");
             }
             catch
             {
@@ -87,7 +87,7 @@ namespace YT2MP3
         /// </summary>
         private static void ZipExtractSingleFile(string zipPath, string entryName, string destPath)
         {
-            const uint SigLocal   = 0x04034B50;
+            const uint SigLocal = 0x04034B50;
             const uint SigCentral = 0x02014B50;
 
             using (var fs = new FileStream(zipPath, FileMode.Open, FileAccess.Read))
@@ -102,27 +102,27 @@ namespace YT2MP3
 
                     if (sig != SigLocal)
                     {
-                        // data descriptor ou signature inconnue : on cherche le prochain header
+                        // Data descriptor ou signature inconnue : on cherche le prochain header.
                         SkipToNextSignature(fs, br);
                         continue;
                     }
 
                     // Local file header
                     br.ReadUInt16(); // version needed
-                    var flags       = br.ReadUInt16();
+                    var flags = br.ReadUInt16();
                     var compression = br.ReadUInt16(); // 0 = Store, 8 = Deflate
                     br.ReadUInt32(); // mod time + date
                     br.ReadUInt32(); // crc32
-                    var compSize    = (long)br.ReadUInt32();
-                    var uncompSize  = (long)br.ReadUInt32();
-                    var nameLen     = br.ReadUInt16();
-                    var extraLen    = br.ReadUInt16();
+                    var compSize = (long)br.ReadUInt32();
+                    var uncompSize = (long)br.ReadUInt32();
+                    var nameLen = br.ReadUInt16();
+                    var extraLen = br.ReadUInt16();
 
-                    var rawName  = br.ReadBytes(nameLen);
+                    var rawName = br.ReadBytes(nameLen);
                     br.ReadBytes(extraLen);
 
                     var fullName = Encoding.UTF8.GetString(rawName).Replace('\\', '/');
-                    var slash    = fullName.LastIndexOf('/');
+                    var slash = fullName.LastIndexOf('/');
                     var fileName = slash >= 0 ? fullName.Substring(slash + 1) : fullName;
 
                     bool isTarget = string.Equals(fileName, entryName, StringComparison.OrdinalIgnoreCase);
@@ -184,9 +184,9 @@ namespace YT2MP3
             }
 
             using (var compStream = new MemoryStream(compressed))
-            using (var deflate   = new System.IO.Compression.DeflateStream(
-                                       compStream, System.IO.Compression.CompressionMode.Decompress))
-            using (var dst       = new FileStream(destPath, FileMode.Create, FileAccess.Write))
+            using (var deflate = new System.IO.Compression.DeflateStream(
+                       compStream, System.IO.Compression.CompressionMode.Decompress))
+            using (var dst = new FileStream(destPath, FileMode.Create, FileAccess.Write))
             {
                 deflate.CopyTo(dst);
             }
@@ -217,26 +217,31 @@ namespace YT2MP3
             var request = (HttpWebRequest)WebRequest.Create(url);
             request.UserAgent = "YT2MP3-App";
             request.AllowAutoRedirect = true;
+            request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
-            using (var response = (HttpWebResponse)await request.GetResponseAsync())
-            using (var stream   = response.GetResponseStream())
-            using (var file     = new FileStream(destPath, FileMode.Create, FileAccess.Write,
-                                                 FileShare.None, 81920, useAsync: true))
+            using (var response = (HttpWebResponse)await request.GetResponseAsync().ConfigureAwait(false))
+            using (var stream = response.GetResponseStream())
+            using (var file = new FileStream(destPath, FileMode.Create, FileAccess.Write,
+                                             FileShare.None, 81920, useAsync: true))
             {
-                var total  = response.ContentLength;
+                var total = response.ContentLength;
                 var buffer = new byte[81920];
                 long downloaded = 0;
                 var lastPct = -1;
                 int read;
 
-                while ((read = await stream.ReadAsync(buffer, 0, buffer.Length, token)) > 0)
+                while ((read = await stream.ReadAsync(buffer, 0, buffer.Length, token).ConfigureAwait(false)) > 0)
                 {
-                    await file.WriteAsync(buffer, 0, read, token);
+                    await file.WriteAsync(buffer, 0, read, token).ConfigureAwait(false);
                     downloaded += read;
                     if (total > 0)
                     {
                         var pct = (int)(downloaded * 100L / total);
-                        if (pct != lastPct) { lastPct = pct; onPercent(pct); }
+                        if (pct != lastPct)
+                        {
+                            lastPct = pct;
+                            onPercent(pct);
+                        }
                     }
                 }
             }

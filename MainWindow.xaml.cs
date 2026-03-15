@@ -15,6 +15,17 @@ namespace YT2MP3
 {
     public partial class MainWindow : Window
     {
+        private const string CaptionInfo = "Information";
+        private const string CaptionError = "Erreur";
+        private const string CaptionResult = "Résultat";
+
+        private static readonly string LogDirectoryPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "YT2MP3",
+            "logs");
+
+        private static readonly string LogFilePath = Path.Combine(LogDirectoryPath, "app.log");
+
         private CancellationTokenSource _cts;
 
         public MainWindow()
@@ -29,7 +40,7 @@ namespace YT2MP3
             var ver = Assembly.GetExecutingAssembly().GetName().Version;
             TxtToolsVersion.Text = string.Format("v{0}.{1}.{2}", ver.Major, ver.Minor, ver.Build);
 
-            Loaded += async (_, __) => await InitializeToolsAsync();
+            Loaded += MainWindow_Loaded;
         }
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
@@ -42,32 +53,34 @@ namespace YT2MP3
             }
         }
 
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            await InitializeToolsAsync();
+        }
+
         private async Task InitializeToolsAsync()
         {
             if (ToolManager.YtDlpReady && ToolManager.FfmpegReady)
             {
-                SetStatus("yt-dlp et ffmpeg prêts — Prêt");
+                SetStatus("yt-dlp et ffmpeg prêts - Prêt");
                 return;
             }
 
             ToggleUi(false);
             SetStatus("Téléchargement des outils...");
 
-            using (var cts = new CancellationTokenSource())
+            try
             {
-                try
-                {
-                    await ToolManager.EnsureToolsAsync(SetStatus, cts.Token);
-                    SetStatus("Prêt");
-                }
-                catch (Exception ex)
-                {
-                    SetStatus("Erreur — outils manquants");
-                    MessageBox.Show(this,
-                        "Le téléchargement des outils a échoué :\n" + ex.Message +
-                        "\n\nVérifiez votre connexion internet et relancez l'application.",
-                        "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                await ToolManager.EnsureToolsAsync(SetStatus, CancellationToken.None);
+                SetStatus("Prêt");
+            }
+            catch (Exception ex)
+            {
+                LogError("Initialisation des outils", ex);
+                SetStatus("Erreur - outils manquants");
+                ShowError(
+                    "Le téléchargement des outils a échoué :\n" + ex.Message +
+                    "\n\nVérifiez votre connexion internet et relancez l'application.");
             }
 
             BtnConvert.IsEnabled = ToolManager.YtDlpReady;
@@ -93,33 +106,33 @@ namespace YT2MP3
         private async void BtnConvert_Click(object sender, RoutedEventArgs e)
         {
             var urls = ParseUrls(TxtUrls.Text);
-            if (!urls.Any())
+            if (urls.Count == 0)
             {
-                MessageBox.Show(this, "Veuillez saisir au moins une URL YouTube valide.", "Information",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                ShowInfo("Veuillez saisir au moins une URL YouTube valide.");
                 return;
             }
 
             var outputFolder = TxtOutputFolder.Text.Trim();
             if (string.IsNullOrWhiteSpace(outputFolder))
             {
-                MessageBox.Show(this, "Veuillez indiquer un dossier de sortie.", "Information",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                ShowInfo("Veuillez indiquer un dossier de sortie.");
                 return;
             }
 
             if (!Path.IsPathRooted(outputFolder))
             {
-                MessageBox.Show(this, "Le dossier de sortie doit être un chemin absolu.", "Information",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                ShowInfo("Le dossier de sortie doit être un chemin absolu.");
                 return;
             }
 
-            try { Directory.CreateDirectory(outputFolder); }
+            try
+            {
+                Directory.CreateDirectory(outputFolder);
+            }
             catch (Exception ex)
             {
-                MessageBox.Show(this, "Impossible d'utiliser le dossier de sortie : " + ex.Message,
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                LogError("Création du dossier de sortie", ex);
+                ShowError("Impossible d'utiliser le dossier de sortie : " + ex.Message);
                 return;
             }
 
@@ -165,6 +178,7 @@ namespace YT2MP3
                     else
                     {
                         failed++;
+                        LogMessage("Échec conversion", "URL=" + url + Environment.NewLine + result.Output);
                     }
 
                     ConversionProgressBar.Value = i + 1;
@@ -173,23 +187,22 @@ namespace YT2MP3
                 if (!_cts.Token.IsCancellationRequested)
                 {
                     var summary = failed == 0
-                        ? string.Format("?  {0} fichier(s) convertis avec succès.", urls.Count)
-                        : string.Format("?  Terminé — {0} succès, {1} échec(s).", urls.Count - failed, failed);
+                        ? string.Format("OK - {0} fichier(s) convertis avec succès.", urls.Count)
+                        : string.Format("Terminé - {0} succès, {1} échec(s).", urls.Count - failed, failed);
                     SetStatus(summary);
 
                     var msg = failed == 0
                         ? "Toutes les conversions sont terminées avec succès."
                         : string.Format("{0} conversion(s) ont échoué.", failed);
-                    MessageBox.Show(this, msg, "Résultat", MessageBoxButton.OK,
+                    MessageBox.Show(this, msg, CaptionResult, MessageBoxButton.OK,
                         failed == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
                 }
             }
             catch (Exception ex)
             {
+                LogError("Conversion", ex);
                 SetStatus("Erreur inattendue : " + ex.Message);
-                MessageBox.Show(this,
-                    "Impossible d'exécuter la conversion.\nVérifiez que yt-dlp et ffmpeg sont disponibles.",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowError("Impossible d'exécuter la conversion.\nVérifiez que yt-dlp et ffmpeg sont disponibles.");
             }
             finally
             {
@@ -198,6 +211,16 @@ namespace YT2MP3
                 ToggleUi(true);
                 ConversionProgressBar.Value = 0;
             }
+        }
+
+        private void ShowInfo(string message)
+        {
+            MessageBox.Show(this, message, CaptionInfo, MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void ShowError(string message)
+        {
+            MessageBox.Show(this, message, CaptionError, MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         private void SetStatus(string text)
@@ -267,10 +290,18 @@ namespace YT2MP3
 
         private static Task<ProcessResult> RunProcessAsync(string fileName, string arguments, CancellationToken token)
         {
-            var tcs = new TaskCompletionSource<ProcessResult>();
+            var tcs = new TaskCompletionSource<ProcessResult>(TaskCreationOptions.RunContinuationsAsynchronously);
             var output = new StringBuilder();
 
+            if (token.IsCancellationRequested)
+            {
+                tcs.TrySetCanceled();
+                return tcs.Task;
+            }
+
             var process = new Process();
+            CancellationTokenRegistration cancellationRegistration = default(CancellationTokenRegistration);
+
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = fileName,
@@ -282,16 +313,23 @@ namespace YT2MP3
             };
             process.EnableRaisingEvents = true;
 
-            process.OutputDataReceived += (s, ev) => { if (!string.IsNullOrWhiteSpace(ev.Data)) output.AppendLine(ev.Data); };
-            process.ErrorDataReceived += (s, ev) => { if (!string.IsNullOrWhiteSpace(ev.Data)) output.AppendLine(ev.Data); };
+            process.OutputDataReceived += (s, ev) =>
+            {
+                if (!string.IsNullOrWhiteSpace(ev.Data)) output.AppendLine(ev.Data);
+            };
+            process.ErrorDataReceived += (s, ev) =>
+            {
+                if (!string.IsNullOrWhiteSpace(ev.Data)) output.AppendLine(ev.Data);
+            };
 
             process.Exited += (s, ev) =>
             {
+                cancellationRegistration.Dispose();
                 tcs.TrySetResult(new ProcessResult { ExitCode = process.ExitCode, Output = output.ToString() });
                 process.Dispose();
             };
 
-            token.Register(() =>
+            cancellationRegistration = token.Register(() =>
             {
                 try { if (!process.HasExited) process.Kill(); } catch { }
                 tcs.TrySetCanceled();
@@ -299,6 +337,7 @@ namespace YT2MP3
 
             if (!process.Start())
             {
+                cancellationRegistration.Dispose();
                 process.Dispose();
                 throw new InvalidOperationException("Le processus de conversion n'a pas pu démarrer.");
             }
@@ -307,6 +346,30 @@ namespace YT2MP3
             process.BeginErrorReadLine();
 
             return tcs.Task;
+        }
+
+        private static void LogError(string context, Exception ex)
+        {
+            LogMessage(context, ex.ToString());
+        }
+
+        private static void LogMessage(string context, string details)
+        {
+            try
+            {
+                Directory.CreateDirectory(LogDirectoryPath);
+                var entry = string.Format(
+                    "[{0:yyyy-MM-dd HH:mm:ss}] {1}{2}{3}{2}{2}",
+                    DateTime.Now,
+                    context,
+                    Environment.NewLine,
+                    details ?? string.Empty);
+                File.AppendAllText(LogFilePath, entry, Encoding.UTF8);
+            }
+            catch
+            {
+                // Ne jamais bloquer l'application pour un problème de log.
+            }
         }
 
         private sealed class ProcessResult

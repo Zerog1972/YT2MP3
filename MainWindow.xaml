@@ -148,16 +148,7 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Margin="4,0,4,12">
-                <TextBlock Text="YT2MP3"
-                           FontSize="27"
-                           FontWeight="SemiBold"
-                           Foreground="{StaticResource TextMainBrush}" />
-                <TextBlock Text="Conversion YouTube vers MP3"
-                           Margin="0,2,0,0"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           FontSize="13" />
-            </StackPanel>
+            <StackPanel Grid.Row="0" Margin="4,0,4,12"/>
 
             <Border Grid.Row="1" Style="{StaticResource CardStyle}">
                 <Grid>
