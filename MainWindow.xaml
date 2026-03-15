@@ -7,28 +7,30 @@
         MinHeight="420"
         MinWidth="640"
         WindowStartupLocation="CenterScreen"
-        Background="#F3F6FC"
+        Background="#F5F7FB"
         FontFamily="Segoe UI"
         SnapsToDevicePixels="True"
         UseLayoutRounding="True"
         KeyDown="Window_KeyDown">
     <Window.Resources>
-        <SolidColorBrush x:Key="PrimaryBrush" Color="#4F46E5" />
-        <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#4338CA" />
-        <SolidColorBrush x:Key="AccentBrush" Color="#2563EB" />
+        <SolidColorBrush x:Key="PrimaryBrush" Color="#0F6CBD" />
+        <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#115EA3" />
+        <SolidColorBrush x:Key="SecondaryBrush" Color="#F3F6FB" />
+        <SolidColorBrush x:Key="SecondaryHoverBrush" Color="#EAF0F8" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#0F6CBD" />
         <SolidColorBrush x:Key="CardBrush" Color="#FCFFFFFF" />
-        <SolidColorBrush x:Key="CardBorderBrush" Color="#DCE4F2" />
-        <SolidColorBrush x:Key="TextMainBrush" Color="#111827" />
-        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#6B7280" />
+        <SolidColorBrush x:Key="CardBorderBrush" Color="#D8E2EF" />
+        <SolidColorBrush x:Key="TextMainBrush" Color="#1F2937" />
+        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#64748B" />
 
         <DropShadowEffect x:Key="CardShadow"
-                          Color="#260F172A"
-                          BlurRadius="18"
-                          ShadowDepth="4"
+                          Color="#220F172A"
+                          BlurRadius="20"
+                          ShadowDepth="3"
                           Opacity="0.45" />
 
         <Style x:Key="CardStyle" TargetType="Border">
-            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="CornerRadius" Value="12" />
             <Setter Property="Background" Value="{StaticResource CardBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
@@ -37,9 +39,9 @@
         </Style>
 
         <Style TargetType="TextBox">
-            <Setter Property="Background" Value="#F8FAFF" />
+            <Setter Property="Background" Value="#FFFFFF" />
             <Setter Property="Foreground" Value="{StaticResource TextMainBrush}" />
-            <Setter Property="BorderBrush" Value="#D5DEED" />
+            <Setter Property="BorderBrush" Value="#D0DBEA" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="11,9" />
             <Setter Property="FontSize" Value="13" />
@@ -56,7 +58,6 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsKeyboardFocused" Value="True">
                                 <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
-                                <Setter TargetName="Root" Property="Background" Value="#FFFFFF" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Root" Property="Opacity" Value="0.65" />
@@ -76,7 +77,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Root"
-                                CornerRadius="9"
+                                CornerRadius="8"
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}">
@@ -86,14 +87,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Root" Property="RenderTransform">
-                                    <Setter.Value>
-                                        <ScaleTransform ScaleX="0.985" ScaleY="0.985" />
-                                    </Setter.Value>
-                                </Setter>
+                                <Setter TargetName="Root" Property="Opacity" Value="0.92" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Root" Property="Opacity" Value="0.58" />
+                                <Setter TargetName="Root" Property="Opacity" Value="0.55" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -103,11 +100,11 @@
 
         <Style x:Key="SecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
             <Setter Property="Foreground" Value="#334155" />
-            <Setter Property="Background" Value="#EEF2FF" />
-            <Setter Property="BorderBrush" Value="#D5DEED" />
+            <Setter Property="Background" Value="{StaticResource SecondaryBrush}" />
+            <Setter Property="BorderBrush" Value="#CFDBEA" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#E2E8FF" />
+                    <Setter Property="Background" Value="{StaticResource SecondaryHoverBrush}" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -127,17 +124,17 @@
     </Window.Resources>
 
     <Grid>
-        <Ellipse Width="260" Height="260"
+        <Ellipse Width="280" Height="280"
                  HorizontalAlignment="Left"
                  VerticalAlignment="Top"
-                 Margin="-95,-120,0,0"
-                 Fill="#3B6366F1"
+                 Margin="-110,-130,0,0"
+                 Fill="#1F60A5FA"
                  IsHitTestVisible="False" />
-        <Ellipse Width="220" Height="220"
+        <Ellipse Width="240" Height="240"
                  HorizontalAlignment="Right"
                  VerticalAlignment="Bottom"
-                 Margin="0,0,-90,-100"
-                 Fill="#2A60A5FA"
+                 Margin="0,0,-95,-105"
+                 Fill="#17659BE3"
                  IsHitTestVisible="False" />
 
         <Grid Margin="22">
@@ -148,7 +145,16 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Margin="4,0,4,12"/>
+            <StackPanel Grid.Row="0" Margin="4,0,4,12">
+                <TextBlock Text="YT2MP3"
+                           FontSize="26"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource TextMainBrush}" />
+                <TextBlock Text="Convertisseur YouTube vers MP3"
+                           Margin="0,2,0,0"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           FontSize="13" />
+            </StackPanel>
 
             <Border Grid.Row="1" Style="{StaticResource CardStyle}">
                 <Grid>
@@ -211,7 +217,7 @@
                                      Maximum="100"
                                      Value="0"
                                      Foreground="{StaticResource AccentBrush}"
-                                     Background="#EAF0FF"
+                                     Background="#EAF2FB"
                                      BorderThickness="0" />
 
                         <Button x:Name="BtnConvert"
@@ -228,8 +234,8 @@
 
             <StatusBar Grid.Row="3"
                        Margin="0,13,0,0"
-                       Background="#EEF2FF"
-                       BorderBrush="#D5DEED"
+                       Background="#F3F7FC"
+                       BorderBrush="#D8E3F0"
                        BorderThickness="1"
                        Padding="7,1">
                 <StatusBarItem HorizontalAlignment="Stretch">
